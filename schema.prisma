@@ -1,0 +1,80 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Estudante {
+  id          Int          @id @default(autoincrement())
+  nome        String
+  matricula   String       @unique
+  email       String       @unique
+  createdAt   DateTime     @default(now()) @map("created_at")
+  turma       String
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+  deletedAt   DateTime?    @map("deleted_at")
+  emprestimos Emprestimo[]
+
+  @@index([nome])
+  @@map("estudantes")
+}
+
+model Livro {
+  id                    Int              @id @default(autoincrement())
+  titulo                String
+  ano                   Int
+  autor                 String
+  createdAt             DateTime         @default(now()) @map("created_at")
+  exemplaresDisponiveis Int              @default(1) @map("exemplares_disponiveis")
+  exemplaresTotal       Int              @default(1) @map("exemplares_total")
+  updatedAt             DateTime         @updatedAt @map("updated_at")
+  deletedAt             DateTime?        @map("deleted_at")
+  emprestimos           Emprestimo[]
+  categorias            LivroCategoria[]
+
+  @@index([titulo])
+  @@index([autor])
+  @@map("livros")
+}
+
+model Categoria {
+  id        Int              @id @default(autoincrement())
+  nome      String           @unique
+  descricao String?
+  createdAt DateTime         @default(now()) @map("created_at")
+  updatedAt DateTime         @updatedAt @map("updated_at")
+  livros    LivroCategoria[]
+
+  @@map("categorias")
+}
+
+model LivroCategoria {
+  livroId     Int       @map("livro_id")
+  categoriaId Int       @map("categoria_id")
+  categoria   Categoria @relation(fields: [categoriaId], references: [id])
+  livro       Livro     @relation(fields: [livroId], references: [id], onDelete: Cascade)
+
+  @@id([livroId, categoriaId])
+  @@map("livro_categorias")
+}
+
+model Emprestimo {
+  id             Int       @id @default(autoincrement())
+  livroId        Int       @map("livro_id")
+  estudanteId    Int       @map("estudante_id")
+  dataPrevista   DateTime  @map("data_prevista")
+  dataDevolucao  DateTime? @map("data_devolucao")
+  status         String    @default("ativo")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  dataEmprestimo DateTime  @default(now()) @map("data_emprestimo")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+  estudante      Estudante @relation(fields: [estudanteId], references: [id])
+  livro          Livro     @relation(fields: [livroId], references: [id])
+
+  @@index([status])
+  @@index([estudanteId])
+  @@map("emprestimos")
+}
